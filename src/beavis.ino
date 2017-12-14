@@ -1,8 +1,22 @@
+#include "HttpClient/HttpClient.h"
+
 int led = D0;
 int sensor = A0;
 int lightLevel = 0;
 int threshold = 3200;
 bool occupied = false;
+bool oldOccupied = false;
+String occupiedDescription;
+
+HttpClient http;
+http_request_t request;
+http_response_t response;
+
+http_header_t headers[] = {
+  { "Accept", "*/*" },
+  { "Content-Type", "application/x-www-form-urlencoded" },
+  { NULL, NULL },
+};
 
 void setup() {
   pinMode(led, OUTPUT);
@@ -11,12 +25,26 @@ void setup() {
   Particle.function("setThreshold", setThreshold);
   Particle.variable("lightLevel", lightLevel);
   Particle.variable("occupied", occupied);
+
+  request.hostname = "beavis-web.herokuapp.com";
+  request.path = "/rooms/" + System.deviceID();
+  request.port = 80;
 }
 
 void loop() {
+  oldOccupied = occupied;
   lightLevel = analogRead(sensor);
   occupied = lightLevel > threshold;
+
+  if (occupied != oldOccupied) {
+    occupiedDescription = occupied ? "true" : "false";
+    Particle.publish("occupied", occupiedDescription);
+    request.body = "occupied=" + occupiedDescription;
+    http.patch(request, response, headers);
+  }
+
   digitalWrite(led, occupied ? HIGH : LOW);
+
   delay(100);
 }
 
