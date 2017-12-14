@@ -27,8 +27,25 @@ void setup() {
   Particle.variable("occupied", occupied);
 
   request.hostname = "beavis-web.herokuapp.com";
-  request.path = "/rooms/" + System.deviceID();
   request.port = 80;
+
+  String deviceID = System.deviceID();
+
+  request.path = "/rooms";
+  request.body = "device_id=" + deviceID;
+  http.post(request, response, headers);
+
+  request.path = "/rooms/" + deviceID;
+
+  Particle.subscribe("particle/device/name", handler);
+  Particle.publish("particle/device/name");
+}
+
+void handler(const char *topic, const char *data) {
+  if (String(topic).equals("particle/device/name")) {
+    request.body = "name=" + String(data);
+    http.patch(request, response, headers);
+  }
 }
 
 void loop() {
