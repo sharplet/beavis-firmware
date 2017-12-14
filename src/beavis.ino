@@ -36,14 +36,14 @@ void loop() {
   lightLevel = analogRead(sensor);
   occupied = lightLevel > threshold;
 
+  digitalWrite(led, occupied ? HIGH : LOW);
+
   if (occupied != oldOccupied) {
     occupiedDescription = occupied ? "true" : "false";
     Particle.publish("occupied", occupiedDescription);
     request.body = "occupied=" + occupiedDescription;
     http.patch(request, response, headers);
   }
-
-  digitalWrite(led, occupied ? HIGH : LOW);
 
   delay(100);
 }
