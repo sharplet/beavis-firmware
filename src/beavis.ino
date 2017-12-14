@@ -1,4 +1,4 @@
-int led = D7;
+int led = D0;
 int sensor = A0;
 int lightLevel = 0;
 int threshold = 3200;
